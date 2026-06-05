@@ -41,6 +41,6 @@ I couldn't change this behaviour with a quick fix attempt but it does not seem t
 
 Download the tampermonkey browser extension and add the ask_llm.js script to add a button to redirect you to an llm model
 
-For all questions the question is copied to your clipboard
+For all llms the question is copied to your clipboard
 
-For chatgpt and claude it is also placed in the prompt box (in gemini this is not possible, you just have to paste to the prompt box yourself)
+For chatgpt and claude the question is also placed in the prompt box (in gemini this is not possible, you just have to paste to the prompt box yourself)
