@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ExamTopics LLM Floating Helper
 // @namespace    http://tampermonkey.net/
-// @version      2.0
+// @version      4.0
 // @description  Standalone floating script to send ExamTopics questions to LLMs
 // @author       You
 // @match        *://*.examtopics.com/discussions/*
@@ -57,16 +57,34 @@
 
     function cleanText(element) {
         const clone = element.cloneNode(true);
-        const badElements = clone.querySelectorAll('.correct-answer-box, .correct-hidden, .reveal-solution, .voted-answers-tally, .question-discussion-button, .btn, .hide-solution');
+        const badElements = clone.querySelectorAll('.correct-answer-box, .voted-answers-tally, .question-discussion-button, .btn, .hide-solution');
         badElements.forEach(el => el.remove());
         
-        let text = clone.innerText.trim();
-        text = text.replace(/Reveal Solution/gi, '');
-        text = text.replace(/Hide Solution/gi, '');
-        text = text.replace(/Next Question/gi, '');
-        text = text.replace(/Previous Question/gi, '');
-        text = text.replace(/Discussion\s*\(\d+\)/gi, '');
-        return text.replace(/\n\s*\n/g, '\n\n').trim();
+        const images = clone.querySelectorAll('img');
+        images.forEach(img => {
+            const imgText = document.createTextNode(`\n[Image reference: ${img.src}]\n`);
+            img.parentNode.replaceChild(imgText, img);
+        });
+
+        let text = clone.innerText || clone.textContent;
+        
+        text = text.replace(/[\u00A0\u1680\u180e\u2000-\u200a\u202f\u205f\u3000]/g, ' ');
+        text = text.replace(/[ \t]+/g, ' ');
+        
+        const lines = text.split('\n')
+            .map(line => line.trim())
+            .filter(line => line.length > 0 &&
+                            !line.match(/^Reveal Solution$/i) &&
+                            !line.match(/^Hide Solution$/i) &&
+                            !line.match(/^Next Question$/i) &&
+                            !line.match(/^Previous Question$/i) &&
+                            !line.match(/^Discussion\s*\(\d+\)$/i));
+                            
+        let finalString = lines.join('\n');
+        
+        finalString = finalString.replace(/^([A-Z]\.)\s*\n/gm, '$1 ');
+        
+        return finalString;
     }
 
     btn.addEventListener('click', () => {
