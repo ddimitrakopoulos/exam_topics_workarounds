@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ExamTopics LLM Floating Helper
 // @namespace    http://tampermonkey.net/
-// @version      4.0
+// @version      5.0
 // @description  Standalone floating script to send ExamTopics questions to LLMs
 // @author       You
 // @match        *://*.examtopics.com/discussions/*
@@ -67,6 +67,10 @@
         });
 
         let text = clone.innerText || clone.textContent;
+        
+        text = text.replace(/\(Suggested Answer\)/gi, '');
+        text = text.replace(/Suggested Answer/gi, '');
+        text = text.replace(/Most Voted/gi, '');
         
         text = text.replace(/[\u00A0\u1680\u180e\u2000-\u200a\u202f\u205f\u3000]/g, ' ');
         text = text.replace(/[ \t]+/g, ' ');
