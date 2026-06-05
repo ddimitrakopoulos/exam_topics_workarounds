@@ -36,3 +36,13 @@ This adds 4 buttons above the question :
 If the next question or topic does not exist you will be redirected in a general forum 
 
 I couldn't change this behaviour with a quick fix attempt but it does not seem to cause problems
+
+### Ask LLM Directly From The Question
+
+Download the tampermonkey browser extension and add the ask_llm_beta.js script to add a button to redirect you to an llm model
+
+For all questions the question is copied to your clipboard
+
+For chatgpt and claude it is also placed in the prompt box (in gemini this is not possible)
+
+It is in beta because the questions are not always copied successfully
