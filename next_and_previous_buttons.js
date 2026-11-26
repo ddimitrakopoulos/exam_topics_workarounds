@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ExamTopics DDG Fast Navigate
 // @namespace    http://tampermonkey.net/
-// @version      4.1
+// @version      4.2
 // @description  Uses DuckDuckGo I'm Feeling Lucky to navigate between ExamTopics discussions
 // @author       You
 // @match        *://*.examtopics.com/discussions/*
@@ -22,6 +22,61 @@
 
     if (!targetArea) return;
 
+    const style = document.createElement('style');
+    style.textContent = `
+        [data-et-workaround="nav"] .et-nav-btn {
+            flex: 1;
+            min-width: 140px;
+            padding: 8px 14px;
+            border-radius: 4px;
+            font-size: 15px;
+            line-height: 1.4;
+            cursor: pointer;
+            transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+        }
+        [data-et-workaround="nav"] .et-nav-outline-info {
+            color: #17a2b8;
+            background-color: #ffffff;
+            border: 1px solid #17a2b8;
+        }
+        [data-et-workaround="nav"] .et-nav-outline-info:hover {
+            color: #ffffff;
+            background-color: #17a2b8;
+            border-color: #17a2b8;
+        }
+        [data-et-workaround="nav"] .et-nav-outline-secondary {
+            color: #495057;
+            background-color: #ffffff;
+            border: 1px solid #6c757d;
+        }
+        [data-et-workaround="nav"] .et-nav-outline-secondary:hover {
+            color: #ffffff;
+            background-color: #6c757d;
+            border-color: #6c757d;
+        }
+        [data-et-workaround="nav"] .et-nav-primary {
+            color: #ffffff;
+            background-color: #007bff;
+            border: 1px solid #007bff;
+            font-weight: bold;
+        }
+        [data-et-workaround="nav"] .et-nav-primary:hover {
+            background-color: #0069d9;
+            border-color: #0062cc;
+        }
+        [data-et-workaround="nav"] .et-nav-info {
+            color: #ffffff;
+            background-color: #17a2b8;
+            border: 1px solid #17a2b8;
+            font-weight: bold;
+        }
+        [data-et-workaround="nav"] .et-nav-info:hover {
+            background-color: #138496;
+            border-color: #117a8b;
+        }
+    `;
+    document.head.appendChild(style);
+
     const navGroup = document.createElement('div');
     navGroup.dataset.etWorkaround = 'nav';
     navGroup.className = 'd-flex justify-content-between mt-3 mb-3';
@@ -33,14 +88,12 @@
         return `https://duckduckgo.com/?q=!ducky+${encodeURIComponent(query)}`;
     }
 
-    function createNavButton(label, className, targetTopic, targetQuestion, bold = false) {
+    function createNavButton(label, variantClass, targetTopic, targetQuestion) {
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.innerText = label;
         btn.dataset.originalLabel = label;
-        btn.className = className;
-        btn.style.flex = '1';
-        if (bold) btn.style.fontWeight = 'bold';
+        btn.className = `btn et-nav-btn ${variantClass}`;
         btn.addEventListener('click', () => {
             btn.innerText = '⏳ Routing...';
             window.location.href = buildUrl(targetTopic, targetQuestion);
@@ -49,15 +102,15 @@
     }
 
     if (topic > 1) {
-        navGroup.appendChild(createNavButton(`⬅️ Prev Topic (T${topic - 1})`, 'btn btn-outline-info', topic - 1, 1));
+        navGroup.appendChild(createNavButton(`⬅️ Prev Topic (T${topic - 1})`, 'et-nav-outline-info', topic - 1, 1));
     }
 
     if (question > 1) {
-        navGroup.appendChild(createNavButton(`⬅️ Prev Q (Q${question - 1})`, 'btn btn-outline-secondary', topic, question - 1));
+        navGroup.appendChild(createNavButton(`⬅️ Prev Q (Q${question - 1})`, 'et-nav-outline-secondary', topic, question - 1));
     }
 
-    navGroup.appendChild(createNavButton(`Next Q (Q${question + 1}) ➡️`, 'btn btn-primary', topic, question + 1, true));
-    navGroup.appendChild(createNavButton(`Next Topic (T${topic + 1}) ➡️`, 'btn btn-info', topic + 1, 1, true));
+    navGroup.appendChild(createNavButton(`Next Q (Q${question + 1}) ➡️`, 'et-nav-primary', topic, question + 1));
+    navGroup.appendChild(createNavButton(`Next Topic (T${topic + 1}) ➡️`, 'et-nav-info', topic + 1, 1));
 
     window.addEventListener('pageshow', () => {
         navGroup.querySelectorAll('button[data-original-label]').forEach(btn => {
