@@ -2,45 +2,45 @@
 
 ## Fixes
 
-### Pop Up After Some Seconds
+### Promo Banner on Discussion Pages (Old Pop-Up Filter Note)
 
-You need to have an adblocker browser extension that allows for custom filters (Ublock Origin works)
+ExamTopics removed the old timed `.popup-overlay` pop-up on discussion pages, so `examtopics.com##.popup-overlay` is no longer needed.
 
-In settings look for My Filters/Custom Filters or anything similar
-
-There paste the following string:
+If you have an adblocker that supports custom filters (such as uBlock Origin), you can optionally hide the "View all questions & answers" promo banner on discussion pages by adding the following to **My Filters / Custom Filters**:
 
 ```
-examtopics.com##.popup-overlay
+examtopics.com##.contrib__ulimited
 ```
-The pop up should no longer appear
 
-### Reveal Answers Does Not Work On Non Premium Accounts
+> Note: Exam view pages beyond page 1 (`/exams/.../view/2/` onward) are now gated server-side behind login/subscription and cannot be bypassed with CSS filters.
 
-Download the tampermonkey browser extension and add the reveal.js script 
+### Reveal Community Votes On Discussion Pages
 
-The Reveal Answers button will be replaced with another green button
+Download the Tampermonkey browser extension and add the [reveal.js](./reveal.js) script.
 
-Sadly the new button only works in questions that are multiple choice and don't include an image but that should be about 85% of the total questions
+ExamTopics no longer sends the official suggested answer or hidden vote JSON in discussion page HTML. Instead, `reveal.js` replaces the non-functional `Show Suggested Answer` button with a green **Reveal Community Votes** toggle that:
+- Tallies community votes directly from the discussion comments (matching ExamTopics's official vote distribution)
+- Displays a percentage bar chart with exact vote counts
+- Highlights the most-voted option(s) directly in the question text
 
-### No Navigation For Non Premium Users
+For questions without multiple-choice voting tags (e.g. drag-and-drop or hotspot questions), the panel notes that no vote tags were found so you can check the comments directly.
 
-Download the tampermonkey browser extension and add the next_and_previous_buttons.js script
+### Navigation Between Discussion Questions
 
-This adds 4 buttons above the question :
-- Next Question
-- Previous Question
+Download the Tampermonkey browser extension and add the [next_and_previous_buttons.js](./next_and_previous_buttons.js) script.
+
+This adds up to 4 buttons above the question on discussion pages (including multi-word exam names such as AWS exams):
+- Prev Topic
+- Prev Q
+- Next Q
 - Next Topic
-- Previous Topic
 
-If the next question or topic does not exist you will be redirected in a general forum 
-
-I couldn't change this behaviour with a quick fix attempt but it does not seem to cause problems
+Routing uses DuckDuckGo's `!ducky` redirect. If the next question or topic does not exist (or isn't indexed as the top result), you may be redirected to a general discussion listing page.
 
 ### Ask LLM Directly From The Question
 
-Download the tampermonkey browser extension and add the ask_llm.js script to add a button to redirect you to an llm model
+Download the Tampermonkey browser extension and add the [ask_llm.js](./ask_llm.js) script to add a floating widget in the bottom-right corner of discussion pages.
 
-For all llms the question is copied to your clipboard
-
-For chatgpt and claude the question is also placed in the prompt box (in gemini this is not possible, you just have to paste to the prompt box yourself)
+- Copies the cleaned question text to your clipboard (excluding injected buttons and vote panels)
+- Remembers your preferred LLM (`ChatGPT`, `Claude`, or `Gemini`) across pages
+- For ChatGPT and Claude, pre-fills the prompt box automatically; for Gemini, paste the copied prompt manually

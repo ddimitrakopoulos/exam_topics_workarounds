@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         ExamTopics DDG Fast Navigate
 // @namespace    http://tampermonkey.net/
-// @version      4.0
-// @description  Uses DuckDuckGo I'm Feeling Lucky to bypass bot protection
+// @version      4.1
+// @description  Uses DuckDuckGo I'm Feeling Lucky to navigate between ExamTopics discussions
 // @author       You
 // @match        *://*.examtopics.com/discussions/*
 // @grant        none
@@ -11,17 +11,19 @@
 (function() {
     'use strict';
 
-    const match = document.title.match(/Exam\s+([\w-]+)\s+topic\s+(\d+)\s+question\s+(\d+)/i);
+    const titleSource = document.title || document.querySelector('.discussion-list-header h1')?.textContent || '';
+    const match = titleSource.match(/Exam\s+(.+?)\s+topic\s+(\d+)\s+question\s+(\d+)/i);
     if (!match) return;
 
-    const exam = match[1];
-    const topic = parseInt(match[2]);
-    const question = parseInt(match[3]);
+    const exam = match[1].trim();
+    const topic = parseInt(match[2], 10);
+    const question = parseInt(match[3], 10);
     const targetArea = document.querySelector('.question-body');
 
     if (!targetArea) return;
 
     const navGroup = document.createElement('div');
+    navGroup.dataset.etWorkaround = 'nav';
     navGroup.className = 'd-flex justify-content-between mt-3 mb-3';
     navGroup.style.gap = '10px';
     navGroup.style.flexWrap = 'wrap';
@@ -31,51 +33,37 @@
         return `https://duckduckgo.com/?q=!ducky+${encodeURIComponent(query)}`;
     }
 
-    if (topic > 1) {
-        const prevTopicBtn = document.createElement('button');
-        prevTopicBtn.innerText = `⬅️ Prev Topic (T${topic - 1})`;
-        prevTopicBtn.className = 'btn btn-outline-info';
-        prevTopicBtn.style.flex = '1';
-        prevTopicBtn.addEventListener('click', () => {
-            prevTopicBtn.innerText = '⏳ Routing...';
-            window.location.href = buildUrl(topic - 1, 1);
+    function createNavButton(label, className, targetTopic, targetQuestion, bold = false) {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.innerText = label;
+        btn.dataset.originalLabel = label;
+        btn.className = className;
+        btn.style.flex = '1';
+        if (bold) btn.style.fontWeight = 'bold';
+        btn.addEventListener('click', () => {
+            btn.innerText = '⏳ Routing...';
+            window.location.href = buildUrl(targetTopic, targetQuestion);
         });
-        navGroup.appendChild(prevTopicBtn);
+        return btn;
+    }
+
+    if (topic > 1) {
+        navGroup.appendChild(createNavButton(`⬅️ Prev Topic (T${topic - 1})`, 'btn btn-outline-info', topic - 1, 1));
     }
 
     if (question > 1) {
-        const prevBtn = document.createElement('button');
-        prevBtn.innerText = `⬅️ Prev Q (Q${question - 1})`;
-        prevBtn.className = 'btn btn-outline-secondary';
-        prevBtn.style.flex = '1';
-        prevBtn.addEventListener('click', () => {
-            prevBtn.innerText = '⏳ Routing...';
-            window.location.href = buildUrl(topic, question - 1);
-        });
-        navGroup.appendChild(prevBtn);
+        navGroup.appendChild(createNavButton(`⬅️ Prev Q (Q${question - 1})`, 'btn btn-outline-secondary', topic, question - 1));
     }
 
-    const nextBtn = document.createElement('button');
-    nextBtn.innerText = `Next Q (Q${question + 1}) ➡️`;
-    nextBtn.className = 'btn btn-primary';
-    nextBtn.style.flex = '1';
-    nextBtn.style.fontWeight = 'bold';
-    nextBtn.addEventListener('click', () => {
-        nextBtn.innerText = '⏳ Routing...';
-        window.location.href = buildUrl(topic, question + 1);
-    });
-    navGroup.appendChild(nextBtn);
+    navGroup.appendChild(createNavButton(`Next Q (Q${question + 1}) ➡️`, 'btn btn-primary', topic, question + 1, true));
+    navGroup.appendChild(createNavButton(`Next Topic (T${topic + 1}) ➡️`, 'btn btn-info', topic + 1, 1, true));
 
-    const nextTopicBtn = document.createElement('button');
-    nextTopicBtn.innerText = `Next Topic (T${topic + 1}) ➡️`;
-    nextTopicBtn.className = 'btn btn-info';
-    nextTopicBtn.style.flex = '1';
-    nextTopicBtn.style.fontWeight = 'bold';
-    nextTopicBtn.addEventListener('click', () => {
-        nextTopicBtn.innerText = '⏳ Routing...';
-        window.location.href = buildUrl(topic + 1, 1);
+    window.addEventListener('pageshow', () => {
+        navGroup.querySelectorAll('button[data-original-label]').forEach(btn => {
+            btn.innerText = btn.dataset.originalLabel;
+        });
     });
-    navGroup.appendChild(nextTopicBtn);
 
     targetArea.insertBefore(navGroup, targetArea.firstChild);
 })();
