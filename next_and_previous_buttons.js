@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ExamTopics DDG Fast Navigate
 // @namespace    http://tampermonkey.net/
-// @version      4.2
+// @version      4.3
 // @description  Uses DuckDuckGo I'm Feeling Lucky to navigate between ExamTopics discussions
 // @author       You
 // @match        *://*.examtopics.com/discussions/*
@@ -31,6 +31,7 @@
             border-radius: 4px;
             font-size: 15px;
             line-height: 1.4;
+            text-decoration: none;
             cursor: pointer;
             transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
         }
@@ -89,16 +90,19 @@
     }
 
     function createNavButton(label, variantClass, targetTopic, targetQuestion) {
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.innerText = label;
-        btn.dataset.originalLabel = label;
-        btn.className = `btn et-nav-btn ${variantClass}`;
-        btn.addEventListener('click', () => {
-            btn.innerText = '⏳ Routing...';
-            window.location.href = buildUrl(targetTopic, targetQuestion);
+        const link = document.createElement('a');
+        link.href = buildUrl(targetTopic, targetQuestion);
+        link.rel = 'noreferrer';
+        link.referrerPolicy = 'no-referrer';
+        link.innerText = label;
+        link.dataset.originalLabel = label;
+        link.className = `btn et-nav-btn ${variantClass}`;
+        link.addEventListener('click', (e) => {
+            if (!e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey && e.button === 0) {
+                link.innerText = '⏳ Routing...';
+            }
         });
-        return btn;
+        return link;
     }
 
     if (topic > 1) {
@@ -113,8 +117,8 @@
     navGroup.appendChild(createNavButton(`Next Topic (T${topic + 1}) ➡️`, 'et-nav-info', topic + 1, 1));
 
     window.addEventListener('pageshow', () => {
-        navGroup.querySelectorAll('button[data-original-label]').forEach(btn => {
-            btn.innerText = btn.dataset.originalLabel;
+        navGroup.querySelectorAll('a[data-original-label]').forEach(link => {
+            link.innerText = link.dataset.originalLabel;
         });
     });
 
